@@ -9,6 +9,16 @@ A ChatGPT-like command-line interface that combines Claude with MCP tools and re
 - Modular design with separation of concerns (CLI, Controller, Services)
 - Pluggable LLM service interface (currently implemented for Claude)
 - Command handling for MCP resources and prompts
+- Connects to an MCP server specified by `MCP_SERVER_URL`.
+- Bridges Anthropic API calls to the MCP server's tools, resources, and prompts.
+- Uses `viem` to manage a payer wallet derived from the `USER_MNEMONIC` environment variable.
+- Automatically attaches authentication (`__payer` address and `__signature`) to paid MCP `tools/call` requests.
+- Provides a simple CLI for interaction, including:
+    - Sending chat messages to Claude (which may trigger MCP tool use).
+    - Listing available MCP tools, resources, and prompts.
+    - Directly calling MCP tools (`.tool <name> [json_args]`).
+    - Checking payment deposit info (`.deposit`) and current balance (`.balance`).
+    - Managing the MCP connection (`.connect`, `.disconnect`).
 
 ## Installation
 
