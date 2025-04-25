@@ -48,6 +48,7 @@ function displayWelcomeMessage() {
   console.log('  /list-tools - List available tools');
   console.log('  /list-resources - List available resources');
   console.log('  /call-tool <name> [args] - Call a tool with JSON args');
+  console.log('  /deposit-info - Show server deposit address and cost per call');
   console.log('\nAsk Claude anything or use a command.');
 }
 
@@ -65,6 +66,7 @@ function displayHelp() {
   console.log('  /list-resources - List available resources from the MCP server.');
   console.log('  /call-tool <name> [args] - Call a tool with JSON arguments.');
   console.log('                      Example: /call-tool greet {"name":"World"}');
+  console.log('  /deposit-info - Show the server\'s deposit address and cost per call.');
   console.log('  /help - Show this help message.');
   console.log('  exit - Quit the application.');
 }
@@ -330,6 +332,9 @@ async function handleSpecialCommand(input: string): Promise<boolean> {
       return true;
     case 'call-tool':
       await handleCallToolCommand(args);
+      return true;
+    case 'deposit-info':
+      await handleResourceCommand(['mcp-pay://server/payment/info']); // Reuse existing handler
       return true;
     default:
       console.log(`Unknown command: /${command}. Type /help for available commands.`);
