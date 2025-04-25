@@ -1,14 +1,14 @@
 import { ILLMService, Message, Tool, ToolUseContent, ToolResultContent, TextContent, MessageContent, MessageContentBlock } from '../types.js'; // Correct path relative to src/chat/
-import { Bridge as McpBridge } from '../mcp/bridge.js'; // Correct path relative to src/chat/
+import { McpPayBridge } from '../mcp/pay/bridge.js'; // Correct path relative to src/chat/
 // Removed ChatHistory import
 
 // Renamed class to match file name
 export class Controller {
   private llmService: ILLMService;
-  private mcpBridge: McpBridge;
+  private mcpBridge: McpPayBridge;
   private history: Message[] = []; // Integrated history
 
-  constructor(llmService: ILLMService, mcpBridge: McpBridge) { // Removed chatHistory param
+  constructor(llmService: ILLMService, mcpBridge: McpPayBridge) { // Removed chatHistory param
     this.llmService = llmService;
     this.mcpBridge = mcpBridge;
     // No need to assign chatHistory

@@ -15,10 +15,11 @@ A ChatGPT-like command-line interface that combines Claude with MCP tools and re
 - Automatically attaches authentication (`__payer` address and `__signature`) to paid MCP `tools/call` requests.
 - Provides a simple CLI for interaction, including:
     - Sending chat messages to Claude (which may trigger MCP tool use).
-    - Listing available MCP tools, resources, and prompts.
-    - Directly calling MCP tools (`.tool <name> [json_args]`).
-    - Checking payment deposit info (`.deposit`) and current balance (`.balance`).
-    - Managing the MCP connection (`.connect`, `.disconnect`).
+    - Listing available MCP tools, resources, and prompts (`/list-tools`, `/list-resources`, `/prompt <name>`).
+    - Directly calling MCP tools (`/call-tool <name> [json_args]`). Paid tools will automatically have authentication attached if a `USER_MNEMONIC` is configured.
+    - Checking payment deposit info by fetching the payment resource (`/resource depositinfo`).
+    - Checking current balance (`/balance`).
+    - Managing the MCP connection (`/connect`, `/disconnect`).
 
 ## Installation
 
@@ -44,9 +45,11 @@ This will start the interactive chat. You can:
 
 - Chat normally with Claude
 - Ask Claude to use tools available from the MCP server (e.g., "Use the greet tool to say hello to Moritz")
-- Use special commands:
-  - `/resource [uri]` - List or fetch a resource
-  - `/prompt <name> [key=value,...]` - Use a prompt template (output shown, not automatically sent to Claude)
+- Use special commands (type `/help` for a full list):
+  - `/resource [uri|depositinfo]` - List or fetch a resource. Use `/resource depositinfo` to get payment info.
+  - `/prompt <name> [key=value,...]` - Use a prompt template.
+  - `/call-tool <name> [json_args]` - Call a tool directly. Paid tools require `USER_MNEMONIC` to be set in `.env`.
+  - `/balance` - Check your current payment balance.
   - `/history` - Show conversation history
   - `/clear` - Clear conversation history
   - `/help` - Show help message

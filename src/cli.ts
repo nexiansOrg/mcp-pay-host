@@ -3,7 +3,7 @@
 import readline from 'readline';
 import { configValues } from './config.js'; // Use the new config module
 import { Claude } from './llm/claude.js'; // Updated path
-import { Bridge as McpBridge } from './mcp/bridge.js'; // Updated path
+import { McpPayBridge } from './mcp/pay/bridge.js'; 
 import { Controller as ChatController } from './chat/controller.js'; // Updated path
 import { Message } from './types.js'; // Import Message type for history display
 
@@ -13,9 +13,8 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-const mcpBridge = new McpBridge();
+const mcpBridge = new McpPayBridge();
 const llmService = new Claude(); 
-// Updated controller instantiation (no ChatHistory)
 const chatController = new ChatController(llmService, mcpBridge);
 
 // --- Helper Functions ---
@@ -48,7 +47,7 @@ function displayWelcomeMessage() {
   console.log('  /list-tools - List available tools');
   console.log('  /list-resources - List available resources');
   console.log('  /call-tool <name> [args] - Call a tool with JSON args');
-  console.log('  /deposit-info - Show server deposit address and cost per call');
+  console.log('  /balance - Check your current payment balance');
   console.log('\nAsk Claude anything or use a command.');
 }
 
@@ -66,7 +65,7 @@ function displayHelp() {
   console.log('  /list-resources - List available resources from the MCP server.');
   console.log('  /call-tool <name> [args] - Call a tool with JSON arguments.');
   console.log('                      Example: /call-tool greet {"name":"World"}');
-  console.log('  /deposit-info - Show the server\'s deposit address and cost per call.');
+  console.log('  /balance - Check your current payment balance on the server.');
   console.log('  /help - Show this help message.');
   console.log('  exit - Quit the application.');
 }
@@ -81,7 +80,15 @@ async function handleResourceCommand(args: string[]) {
     console.log('Available resources:');
     resources.forEach(r => console.log(`  ${r.uri}${r.description ? ` - ${r.description}` : ''}`));
   } else {
-    const uri = args[0];
+    let uri = args[0];
+    if (uri.toLowerCase() === 'depositinfo' || uri.toLowerCase() === 'deposit') { 
+        const depositUri = mcpBridge.getDepositInfoUri();
+        if (!depositUri) {
+            console.log('Deposit info URI not available from server capabilities.');
+            return;
+        }
+        uri = depositUri;
+    }
     try {
       console.log(`Fetching resource: ${uri}...`);
       const readResult = await mcpBridge.readResource(uri);
@@ -192,12 +199,13 @@ async function handleReconnectCommand() {
     await mcpBridge.disconnect();
     console.log('Disconnected.');
     
-    // Then reconnect and reinitialize
+    // Then reconnect 
     await mcpBridge.connect();
     console.log('Connected.');
     
-    await mcpBridge.initialize();
-    console.log('Initialized.');
+    // Fetch payment capabilities again
+    await mcpBridge.fetchAndParsePaymentCapabilities();
+    console.log('Initialized implicitly during connect and capabilities fetched.');
     
     // Display current state
     const tools = mcpBridge.getTools();
@@ -298,6 +306,13 @@ async function handleCallToolCommand(args: string[]) {
   }
 }
 
+async function handleBalanceCommand() {
+    console.log('Checking balance...');
+    await mcpBridge.fetchBalance(); // Call the bridge method
+    const balance = mcpBridge.getCurrentBalance(); // Get the stored result
+    console.log(`Server Balance: ${balance || '[Could not fetch balance]'}`);
+}
+
 async function handleSpecialCommand(input: string): Promise<boolean> {
   const [command, ...args] = input.slice(1).split(' ');
   const commandLower = command.toLowerCase();
@@ -333,9 +348,9 @@ async function handleSpecialCommand(input: string): Promise<boolean> {
     case 'call-tool':
       await handleCallToolCommand(args);
       return true;
-    case 'deposit-info':
-      await handleResourceCommand(['mcp-pay://server/payment/info']); // Reuse existing handler
-      return true;
+    case 'balance':
+        await handleBalanceCommand();
+        return true;
     default:
       console.log(`Unknown command: /${command}. Type /help for available commands.`);
       return true; // Indicate a command was handled (even if unknown)
@@ -355,9 +370,10 @@ async function processChatInput(input: string) {
 
 async function main() {
   try {
-    // Connect and initialize MCP Bridge first
+    // Connect MCP Bridge
     await mcpBridge.connect();
-    await mcpBridge.initialize();
+    // Fetch payment capabilities separately
+    await mcpBridge.fetchAndParsePaymentCapabilities();
 
     displayWelcomeMessage();
     startChatLoop();
