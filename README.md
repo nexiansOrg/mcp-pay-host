@@ -1,6 +1,6 @@
-# Claude + MCP Integration (Refactored)
+# Claude + MCP Integration
 
-A ChatGPT-like command-line interface that combines Claude with MCP tools and resources, refactored for modularity.
+A ChatGPT-like command-line interface that combines Claude with MCP tools and resources.
 
 ## Features
 
